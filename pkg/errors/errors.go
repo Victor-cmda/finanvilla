@@ -10,6 +10,11 @@ var (
 	ErrInternalServer     = errors.New("internal server error")
 	ErrDuplicateEntry     = errors.New("duplicate entry")
 	ErrInvalidCredentials = errors.New("invalid credentials")
+	ErrUserNotFound       = errors.New("user not found")
+	ErrInvalidPassword    = errors.New("invalid password")
+	ErrEmailAlreadyUsed   = errors.New("email already in use")
+	ErrInvalidUserID      = errors.New("invalid user ID")
+	ErrInvalidPermission  = errors.New("invalid permission")
 )
 
 type AppError struct {
