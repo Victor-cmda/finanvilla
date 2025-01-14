@@ -1,0 +1,29 @@
+cmd/
+Contém o ponto de entrada da aplicação
+Configuração inicial e injeção de dependências
+
+internal/
+Código específico da aplicação que não será exportado
+    a. domain/
+    Contém as regras de negócio principais
+    Entidades, interfaces de repositórios e serviços de domínio
+
+    b. infrastructure/
+    Implementações técnicas (banco de dados, serviços externos)
+    Implementações concretas dos repositórios
+
+    c. application/
+    Casos de uso da aplicação
+    DTOs para transferência de dados
+
+    d. interfaces/
+    Handlers HTTP
+    Middlewares
+    Definição de rotas
+
+pkg/
+Código que pode ser utilizado por outros projetos
+Utilitários e helpers
+
+tests/
+Testes unitários, de integração e end-to-end
