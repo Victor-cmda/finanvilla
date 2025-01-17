@@ -1,4 +1,3 @@
-// internal/domain/services/user_service.go
 package services
 
 import (
@@ -20,21 +19,18 @@ func NewUserService(userRepo repositories.UserRepository) *UserService {
 }
 
 func (s *UserService) CreateUser(ctx context.Context, user *entities.User) error {
-	// Hash da senha
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
 	}
 	user.Password = string(hashedPassword)
 
-	// Configurações padrão
 	user.Settings = &entities.UserSettings{
 		Theme:    "light",
 		Language: "pt-BR",
 		Currency: "BRL",
 	}
 
-	// Definir permissões baseadas no tipo de usuário
 	permissions := getDefaultPermissions(user.UserType)
 	user.Permissions = permissions
 
@@ -47,7 +43,6 @@ func (s *UserService) UpdateUser(ctx context.Context, user *entities.User) error
 		return errors.ErrUserNotFound
 	}
 
-	// Se uma nova senha foi fornecida, faz o hash
 	if user.Password != "" {
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 		if err != nil {
@@ -55,7 +50,6 @@ func (s *UserService) UpdateUser(ctx context.Context, user *entities.User) error
 		}
 		user.Password = string(hashedPassword)
 	} else {
-		// Mantém a senha antiga se nenhuma nova senha foi fornecida
 		user.Password = existingUser.Password
 	}
 
@@ -97,7 +91,6 @@ func (s *UserService) List(ctx context.Context, page, limit int) ([]entities.Use
 }
 
 func (s *UserService) UpdateSettings(ctx context.Context, userID string, settings *entities.UserSettings) error {
-	// Verifica se o usuário existe
 	_, err := s.userRepo.GetByID(ctx, userID)
 	if err != nil {
 		return errors.ErrUserNotFound
@@ -108,13 +101,11 @@ func (s *UserService) UpdateSettings(ctx context.Context, userID string, setting
 }
 
 func (s *UserService) AddPermissions(ctx context.Context, userID string, permissions []string) error {
-	// Verifica se o usuário existe
 	user, err := s.userRepo.GetByID(ctx, userID)
 	if err != nil {
 		return errors.ErrUserNotFound
 	}
 
-	// Valida as permissões
 	for _, p := range permissions {
 		if !isValidPermission(p) {
 			return errors.ErrInvalidPermission
@@ -125,13 +116,11 @@ func (s *UserService) AddPermissions(ctx context.Context, userID string, permiss
 }
 
 func (s *UserService) RemovePermissions(ctx context.Context, userID string, permissions []string) error {
-	// Verifica se o usuário existe
 	user, err := s.userRepo.GetByID(ctx, userID)
 	if err != nil {
 		return errors.ErrUserNotFound
 	}
 
-	// Valida as permissões
 	for _, p := range permissions {
 		if !isValidPermission(p) {
 			return errors.ErrInvalidPermission
@@ -141,7 +130,6 @@ func (s *UserService) RemovePermissions(ctx context.Context, userID string, perm
 	return s.userRepo.RemovePermissions(ctx, user.ID, permissions)
 }
 
-// Método auxiliar para autenticação
 func (s *UserService) Authenticate(ctx context.Context, email, password string) (*entities.User, error) {
 	user, err := s.userRepo.GetByEmail(ctx, email)
 	if err != nil {
@@ -156,7 +144,6 @@ func (s *UserService) Authenticate(ctx context.Context, email, password string) 
 	return user, nil
 }
 
-// Método auxiliar para verificar se um usuário tem uma determinada permissão
 func (s *UserService) HasPermission(user *entities.User, permission enums.Permission) bool {
 	for _, p := range user.Permissions {
 		if p.Name == permission {
@@ -166,7 +153,6 @@ func (s *UserService) HasPermission(user *entities.User, permission enums.Permis
 	return false
 }
 
-// Função auxiliar para validar permissões
 func isValidPermission(permission string) bool {
 	validPermissions := map[string]bool{
 		string(enums.CreateUser):     true,
@@ -184,7 +170,6 @@ func isValidPermission(permission string) bool {
 func getDefaultPermissions(userType enums.UserType) []entities.Permission {
 	var permissions []entities.Permission
 
-	// Permissões básicas que todos os usuários têm
 	basePermissions := []enums.Permission{
 		enums.ViewReports,
 	}
