@@ -27,6 +27,7 @@ type Config struct {
 
 type JWTConfig struct {
 	Secret          string `env:"JWT_SECRET,required"`
+	RefreshSecret   string `env:"JWT_REFRESH_SECRET,required"`
 	ExpirationHours int    `env:"JWT_EXPIRATION_HOURS" envDefault:"24"`
 }
 

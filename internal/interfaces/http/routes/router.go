@@ -38,6 +38,9 @@ func SetupRouter(config RouterConfig) *gin.Engine {
 		{
 			auth.POST("/register", config.AuthHandler.Register)
 			auth.POST("/login", config.AuthHandler.Login)
+			auth.POST("/refresh", config.AuthHandler.RefreshToken)
+
+			auth.POST("/logout", middlewares.AuthMiddleware(config.JWTSecret), config.AuthHandler.Logout)
 		}
 
 		protected := api.Group("")

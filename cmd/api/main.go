@@ -1,10 +1,12 @@
-// cmd/api/main.go
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
+	"time"
 
+	"finanvilla/internal/domain/entities"
 	"finanvilla/internal/domain/services"
 	"finanvilla/internal/infrastructure/repositories"
 	"finanvilla/internal/interfaces/http/handlers"
@@ -36,9 +38,15 @@ func main() {
 	}
 
 	userRepo := repositories.NewPostgresUserRepository(db)
+	refreshTokenRepo := repositories.NewPostgresRefreshTokenRepository(db)
 
 	userService := services.NewUserService(userRepo)
-	authService := services.NewAuthService(userService, cfg.JWT.Secret)
+	authService := services.NewAuthService(
+		userService,
+		refreshTokenRepo,
+		cfg.JWT.Secret,
+		cfg.JWT.RefreshSecret,
+	)
 
 	userHandler := handlers.NewUserHandler(userService)
 	healthHandler := handlers.NewHealthHandler(cfg.Environment, AppVersion)
@@ -52,6 +60,8 @@ func main() {
 	}
 
 	router := routes.SetupRouter(routerConfig)
+
+	go startRefreshTokenCleanup(refreshTokenRepo)
 
 	log.Printf("Server starting on port %s in %s mode", cfg.Server.Port, cfg.Environment)
 	if err := router.Run(":" + cfg.Server.Port); err != nil {
@@ -82,5 +92,21 @@ func setupDatabase(cfg *config.Config) (*gorm.DB, error) {
 	sqlDB.SetMaxIdleConns(10)
 	sqlDB.SetMaxOpenConns(100)
 
+	// Auto Migrate para a tabela de refresh tokens
+	if err := db.AutoMigrate(&entities.RefreshToken{}); err != nil {
+		return nil, fmt.Errorf("failed to migrate refresh_tokens table: %w", err)
+	}
+
 	return db, nil
+}
+
+func startRefreshTokenCleanup(repo *repositories.PostgresRefreshTokenRepository) {
+	ticker := time.NewTicker(24 * time.Hour)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		if err := repo.DeleteExpired(context.Background()); err != nil {
+			log.Printf("Error cleaning up expired refresh tokens: %v", err)
+		}
+	}
 }
